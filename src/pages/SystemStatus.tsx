@@ -3,14 +3,10 @@ import { useSimulation } from '../context/SimulationContext';
 import { MetricCard } from '../components/MetricCard';
 import { StatusBadge } from '../components/StatusBadge';
 import {
-  ShieldCheck,
   Clock,
   HardDrive,
   Radio,
   Wifi,
-  Cpu,
-  Layers,
-  CheckCircle2,
   Server
 } from 'lucide-react';
 
@@ -19,34 +15,34 @@ export const SystemStatus: React.FC = () => {
 
   const engineeringSubsystems = [
     { name: 'DEPLOYMENT SYSTEM', status: 'READY', desc: 'Umbilical winch tension nominal, slip ring stable' },
-    { name: 'SENSOR POD', status: 'ONLINE', desc: 'Titanium pressure vessel sealed, internal environment dry' },
-    { name: 'METAL SENSOR', status: 'ONLINE', desc: 'Dual-frequency induction coils receiving resonant telemetry' },
-    { name: 'PRESSURE TRANSMITTER', status: 'ONLINE', desc: 'Piezo-resistive diaphragm transmitting depth at 10 Hz' },
+    { name: 'SENSOR POD', status: 'ONLINE', desc: 'Sensor pod housing sealed, internal environment dry' },
+    { name: 'METAL SENSOR', status: 'ONLINE', desc: 'Electromagnetic metal detection sensor active' },
+    { name: 'PRESSURE TRANSMITTER', status: 'ONLINE', desc: 'Hydrostatic pressure sensor transmitting depth at 10 Hz' },
     { name: '3-AXIS IMU', status: 'ONLINE', desc: 'Attitude and heading reference system active' },
     { name: 'DATA LOGGER', status: 'ONLINE', desc: 'High-speed local NVMe writing duplicate soundings' },
-    { name: 'POWER SUB-SYSTEM', status: `${telemetry.battery}%`, desc: `${telemetry.voltage.toFixed(1)}V DC bus, lithium iron phosphate pack` },
-    { name: 'COMMUNICATION LINK', status: 'LINKED', desc: 'Acoustic positioning & telemetry tether operating' },
+    { name: 'TETHER POWER SUB-SYSTEM', status: '120 VDC', desc: 'Continuous surface power feed via armored umbilical cable' },
+    { name: 'COMMUNICATION LINK', status: 'LINKED', desc: 'High-speed subsea telemetry tether operating' },
     { name: 'MISSION CONTROL CONSOLE', status: 'ACTIVE', desc: 'RV Samudra hydrographic workstation synchronizing' },
   ];
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto select-none">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#BDCED3]">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-mono font-bold tracking-wider text-slate-100 uppercase">
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-xl font-sans font-semibold tracking-wide text-[#1F4B60] uppercase">
               SYSTEM STATUS
             </h2>
             <StatusBadge status="ALL SUBSYSTEMS NOMINAL" variant="green" />
           </div>
-          <p className="text-xs font-mono text-cyan-400/90 tracking-wide mt-0.5">
-            ENGINEERING & DEPLOYMENT TELEMETRY // PRAGYA-SEA PLATFORM
+          <p className="text-xs text-[#60868C] font-sans mt-0.5">
+            Engineering & Deployment Telemetry // SAGAR Platform
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-slate-400">
+          <span className="text-xs font-mono text-[#60868C]">
             FIRMWARE BUILD: v2.4.1-OCEAN
           </span>
         </div>
@@ -58,7 +54,7 @@ export const SystemStatus: React.FC = () => {
           label="MISSION UPTIME"
           value="04:18:32"
           subtext="Continuous seabed deployment"
-          icon={<Clock className="w-4 h-4 text-cyan-400" />}
+          icon={<Clock className="w-4 h-4 text-[#2A7C7A]" />}
           highlight={true}
         />
         <MetricCard
@@ -66,13 +62,13 @@ export const SystemStatus: React.FC = () => {
           value="1.84"
           unit="GB"
           subtext="NVMe Local SSD Mirror"
-          icon={<HardDrive className="w-4 h-4 text-cyan-400" />}
+          icon={<HardDrive className="w-4 h-4 text-[#2A7C7A]" />}
         />
         <MetricCard
           label="PACKETS RECEIVED"
           value="128,421"
           subtext="CRC Validation 100%"
-          icon={<Radio className="w-4 h-4 text-cyan-400" />}
+          icon={<Radio className="w-4 h-4 text-[#2A7C7A]" />}
         />
         <MetricCard
           label="PACKET LOSS"
@@ -81,20 +77,20 @@ export const SystemStatus: React.FC = () => {
           subtext="Downlink Error Rate: Minimal"
           status="NOMINAL"
           statusVariant="green"
-          icon={<Wifi className="w-4 h-4 text-emerald-400" />}
+          icon={<Wifi className="w-4 h-4 text-[#3F8068]" />}
         />
       </div>
 
-      {/* Engineering Subsystem Matrix (As specifically required) */}
-      <div className="bg-ocean-850/80 rounded-lg border border-slate-800 p-5 shadow-sm">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+      {/* Engineering Subsystem Matrix */}
+      <div className="bg-[#FFFFFF] rounded-[8px] border border-[#BDCED3] p-5">
+        <div className="flex items-center justify-between pb-3 border-b border-[#E7E5E2] mb-4">
           <div className="flex items-center gap-2">
-            <Server className="w-4 h-4 text-cyan-400" />
-            <h3 className="font-mono text-sm font-bold tracking-wider text-slate-100 uppercase">
+            <Server className="w-4 h-4 text-[#2A7C7A]" />
+            <h3 className="font-sans text-sm font-semibold tracking-wide text-[#1F4B60] uppercase">
               SUBSYSTEM INTEGRITY MATRIX
             </h3>
           </div>
-          <span className="text-xs font-mono text-emerald-400 font-semibold">
+          <span className="text-xs font-mono text-[#3F8068] font-semibold">
             9/9 MODULES OPERATIONAL
           </span>
         </div>
@@ -103,13 +99,13 @@ export const SystemStatus: React.FC = () => {
           {engineeringSubsystems.map((sub, idx) => (
             <div
               key={idx}
-              className="bg-ocean-900/80 p-3.5 rounded border border-slate-800/80 flex items-start justify-between gap-3 hover:border-slate-700 transition-colors"
+              className="bg-[#F8F6F2] p-3.5 rounded-[6px] border border-[#BDCED3] flex items-start justify-between gap-3 hover:border-[#2A7C7A] transition-colors"
             >
               <div className="min-w-0">
-                <div className="font-mono text-xs font-bold text-slate-100 tracking-wider">
+                <div className="font-sans text-xs font-semibold text-[#1F4B60] tracking-wide uppercase">
                   {sub.name}
                 </div>
-                <div className="font-sans text-[11px] text-slate-400 mt-1 leading-snug">
+                <div className="font-sans text-[11px] text-[#60868C] mt-1 leading-snug">
                   {sub.desc}
                 </div>
               </div>

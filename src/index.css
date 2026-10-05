@@ -3,41 +3,129 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-[#050c18] text-slate-200 antialiased overflow-hidden font-sans selection:bg-cyan-500 selection:text-black;
+  html, body {
+    background-color: #F2F6F6;
+    color: #1F4B60;
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: #E2EFF0;
+    color: #1F4B60;
+  }
+
+  /* Headings & Typography Hierarchy */
+  h1 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1F4B60;
+    letter-spacing: -0.01em;
+  }
+
+  h2 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1F4B60;
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: #1F4B60;
+  }
+
+  h4 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1F4B60;
   }
 }
 
-/* Custom Subsea Scientific Scrollbars */
+/* Marine Scientific Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #060e1d;
+  background: #F2F6F6;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #BDCED3;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #0284c7;
+  background: #60868C;
 }
 
-/* Keyframes */
-@keyframes radarSweep {
-  from {
-    transform: rotate(0deg);
+/* Shared Instrument Classes */
+@layer components {
+  .instrument-panel {
+    background-color: #FFFFFF;
+    border: 1px solid #BDCED3;
+    border-radius: 8px;
   }
-  to {
-    transform: rotate(360deg);
+
+  .instrument-header-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #60868C;
+    text-transform: uppercase;
+  }
+
+  .instrument-mono-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: #1F4B60;
+  }
+
+  .btn-marine-primary {
+    background-color: #2A7C7A;
+    color: #FFFFFF;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 150ms ease;
+  }
+  .btn-marine-primary:hover {
+    background-color: #1F4B60;
+  }
+
+  .btn-marine-secondary {
+    background-color: #FFFFFF;
+    border: 1px solid #BDCED3;
+    color: #1F4B60;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 150ms ease, border-color 150ms ease;
+  }
+  .btn-marine-secondary:hover {
+    background-color: #F2F6F6;
+    border-color: #2A7C7A;
   }
 }
 
-.radar-sweep {
-  animation: radarSweep 6s linear infinite;
-  transform-origin: center;
+/* SAGAR AI Chatbot Animations */
+@keyframes thinkPulse {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes userMsgFadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes assistantMsgFadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }

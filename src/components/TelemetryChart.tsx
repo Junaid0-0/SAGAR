@@ -2,8 +2,6 @@ import React from 'react';
 import {
   AreaChart,
   Area,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -15,7 +13,7 @@ import { SignalHistoryPoint } from '../types';
 
 interface TelemetryChartProps {
   data: SignalHistoryPoint[];
-  dataKey?: 'response' | 'depth' | 'temperature' | 'pressure' | 'battery';
+  dataKey?: 'response' | 'depth' | 'temperature' | 'pressure';
   title?: string;
   unit?: string;
   height?: number;
@@ -34,15 +32,15 @@ export const TelemetryChart: React.FC<TelemetryChartProps> = ({
   showThreshold = true,
   thresholdValue = 0.65,
   baselineValue = 0.31,
-  color = '#00F2FE',
+  color = '#2A7C7A',
 }) => {
   return (
-    <div className="w-full bg-ocean-850/80 rounded-md border border-slate-800/90 p-3 select-none flex flex-col">
+    <div className="w-full bg-[#FFFFFF] rounded-[8px] border border-[#CBD9DA] p-3.5 select-none flex flex-col">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] font-mono font-semibold tracking-wider text-slate-300 uppercase">
+        <span className="text-xs font-sans font-semibold tracking-wider text-[#1F4B60] uppercase">
           {title}
         </span>
-        <span className="text-[10px] font-mono text-cyan-400">
+        <span className="text-[10px] font-mono text-[#60868C]">
           UNIT: {unit}
         </span>
       </div>
@@ -50,47 +48,42 @@ export const TelemetryChart: React.FC<TelemetryChartProps> = ({
       <div style={{ width: '100%', height }}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
-            <defs>
-              <linearGradient id={`gradient-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={color} stopOpacity={0.35} />
-                <stop offset="95%" stopColor={color} stopOpacity={0.0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" vertical={false} />
+            <CartesianGrid stroke="#E7E5E2" strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="time"
-              stroke="#64748b"
-              tick={{ fontSize: 9, fontFamily: 'monospace' }}
+              stroke="#60868C"
+              tick={{ fontSize: 9, fontFamily: 'monospace', fill: '#60868C' }}
               interval="preserveStartEnd"
             />
             <YAxis
-              stroke="#64748b"
-              tick={{ fontSize: 9, fontFamily: 'monospace' }}
+              stroke="#60868C"
+              tick={{ fontSize: 9, fontFamily: 'monospace', fill: '#60868C' }}
               domain={dataKey === 'response' ? [0.2, 0.9] : ['auto', 'auto']}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#081324',
-                borderColor: '#0284c7',
-                borderRadius: '4px',
+                backgroundColor: '#FFFFFF',
+                borderColor: '#BDCED3',
+                borderRadius: '6px',
                 fontSize: '11px',
                 fontFamily: 'monospace',
-                color: '#e2e8f0',
+                color: '#1F4B60',
+                boxShadow: '0 2px 6px rgba(31, 75, 96, 0.08)',
               }}
             />
             {showThreshold && dataKey === 'response' && (
               <>
                 <ReferenceLine
                   y={thresholdValue}
-                  stroke="#ef4444"
+                  stroke="#B85C5C"
                   strokeDasharray="3 3"
-                  label={{ value: `THRESHOLD ${thresholdValue}`, fill: '#f87171', fontSize: 9, position: 'right' }}
+                  label={{ value: `THRESHOLD ${thresholdValue}`, fill: '#B85C5C', fontSize: 9, position: 'right' }}
                 />
                 <ReferenceLine
                   y={baselineValue}
-                  stroke="#0284c7"
+                  stroke="#BDCED3"
                   strokeDasharray="2 2"
-                  label={{ value: `BASELINE ${baselineValue}`, fill: '#38bdf8', fontSize: 9, position: 'right' }}
+                  label={{ value: `BASELINE ${baselineValue}`, fill: '#60868C', fontSize: 9, position: 'right' }}
                 />
               </>
             )}
@@ -98,9 +91,9 @@ export const TelemetryChart: React.FC<TelemetryChartProps> = ({
               type="monotone"
               dataKey={dataKey}
               stroke={color}
-              strokeWidth={2}
-              fillOpacity={1}
-              fill={`url(#gradient-${dataKey})`}
+              strokeWidth={1.75}
+              fillOpacity={0.08}
+              fill={color}
               isAnimationActive={false}
             />
           </AreaChart>

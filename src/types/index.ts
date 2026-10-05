@@ -4,6 +4,7 @@ export type PageId =
   | 'seafloor-map'
   | 'metal-detection'
   | 'target-zones'
+  | 'ai-analysis'
   | 'telemetry-data'
   | 'survey-history'
   | 'sensor-diagnostics'
@@ -61,6 +62,7 @@ export interface TargetAnomaly {
   timestamp: string;
   interpretation: string;
   recommendation: string;
+  classification: 'METAL DETECTED' | 'MAGNETIC ANOMALY' | 'UNCLASSIFIED ANOMALY';
   queuedForSurvey: boolean;
   detectedAtSurveyProgress?: number;
 }

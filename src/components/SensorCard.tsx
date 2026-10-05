@@ -17,28 +17,28 @@ export const SensorCard: React.FC<SensorCardProps> = ({
   healthScore,
 }) => {
   return (
-    <div className="bg-ocean-850/80 rounded-md border border-slate-800 p-4 flex flex-col justify-between hover:border-slate-700 transition-all shadow-sm">
+    <div className="bg-[#FFFFFF] rounded-[8px] border border-[#CBD9DA] p-4 flex flex-col justify-between transition-colors">
       <div>
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
-          <div className="flex items-center gap-2.5">
-            {icon && <div className="text-cyan-400">{icon}</div>}
-            <h4 className="font-mono text-xs font-bold uppercase tracking-wider text-slate-100">
+        <div className="flex items-center justify-between pb-2.5 border-b border-[#E7E5E2]">
+          <div className="flex items-center gap-2">
+            {icon && <div className="text-[#2A7C7A]">{icon}</div>}
+            <h4 className="font-sans text-xs font-semibold tracking-wide text-[#1F4B60] uppercase">
               {name}
             </h4>
           </div>
           <StatusBadge status={status} size="sm" />
         </div>
 
-        <div className="mt-3.5 space-y-2">
+        <div className="mt-3 space-y-2">
           {specs.map((item, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between text-xs font-mono"
+              className="flex items-center justify-between text-xs"
             >
-              <span className="text-slate-400 text-[11px]">{item.label}</span>
+              <span className="text-[#60868C] text-[11px] font-sans">{item.label}</span>
               <span
-                className={`font-semibold ${
-                  item.highlight ? 'text-cyan-300' : 'text-slate-200'
+                className={`font-mono text-xs ${
+                  item.highlight ? 'text-[#2A7C7A] font-semibold' : 'text-[#1F4B60] font-medium'
                 }`}
               >
                 {item.value}
@@ -49,14 +49,14 @@ export const SensorCard: React.FC<SensorCardProps> = ({
       </div>
 
       {healthScore !== undefined && (
-        <div className="mt-4 pt-3 border-t border-slate-800/70">
-          <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1">
-            <span>INTEGRITY INDEX</span>
-            <span className="text-emerald-400 font-bold">{healthScore}%</span>
+        <div className="mt-4 pt-3 border-t border-[#E7E5E2]">
+          <div className="flex items-center justify-between text-[11px] font-sans text-[#60868C] mb-1.5">
+            <span className="font-semibold uppercase text-[10px] tracking-wider">INTEGRITY INDEX</span>
+            <span className="text-[#3F8068] font-mono font-semibold">{healthScore}%</span>
           </div>
-          <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-[#E7E5E2] rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-teal-500 to-emerald-400 rounded-full"
+              className="h-full bg-[#3F8068] rounded-full transition-all duration-300"
               style={{ width: `${healthScore}%` }}
             />
           </div>

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   TelemetryState,
   TargetAnomaly,
@@ -18,6 +19,14 @@ import {
   generateInitialSignalHistory
 } from '../data/mockTelemetry';
 import { SURVEY_LINES, GENERATED_MEASUREMENTS, StaticMeasurementPoint } from '../data/mockSurveyTrack';
+import { computeSpatialZones, SpatialZone } from '../utils/zoneClustering';
+import {
+  fetchAiStatus,
+  requestTargetAiAnalysis,
+  requestZonesAiAnalysis,
+  TargetAiAnalysis,
+  AiServiceStatus,
+} from '../services/aiService';
 
 interface SimulationContextType {
   currentPage: PageId;
@@ -48,12 +57,58 @@ interface SimulationContextType {
   triggerDemoAnomaly: () => void;
   resetDemoToBaseline: () => void;
   toggleTargetQueue: (targetId: string) => void;
+  // AI Analysis
+  aiStatus: AiServiceStatus;
+  targetAnalyses: Record<string, TargetAiAnalysis>;
+  spatialZones: SpatialZone[];
+  missionRecommendations: string[];
+  isAiAnalyzing: boolean;
+  runAiAnalysis: () => Promise<void>;
+  analyzeSingleTarget: (code: string) => Promise<TargetAiAnalysis | null>;
+  showAiZonesOnMap: boolean;
+  setShowAiZonesOnMap: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const SimulationContext = createContext<SimulationContextType | undefined>(undefined);
 
 export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentPage, setCurrentPage] = useState<PageId>('overview');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Derive currentPage from current URL pathname as single source of truth
+  const getCurrentPageFromPath = (path: string): PageId => {
+    if (path.startsWith('/live-survey')) return 'live-survey';
+    if (path.startsWith('/seafloor-map')) return 'seafloor-map';
+    if (path.startsWith('/metal-detection')) return 'metal-detection';
+    if (path.startsWith('/target-zones')) return 'target-zones';
+    if (path.startsWith('/ai-analysis')) return 'ai-analysis';
+    if (path.startsWith('/telemetry')) return 'telemetry-data';
+    if (path.startsWith('/survey-history')) return 'survey-history';
+    if (path.startsWith('/diagnostics')) return 'sensor-diagnostics';
+    if (path.startsWith('/system-status')) return 'system-status';
+    if (path.startsWith('/configuration')) return 'configuration';
+    return 'overview';
+  };
+
+  const currentPage = getCurrentPageFromPath(location.pathname);
+
+  const setCurrentPage = useCallback((page: PageId) => {
+    const routeMap: Record<PageId, string> = {
+      'overview': '/overview',
+      'live-survey': '/live-survey',
+      'seafloor-map': '/seafloor-map',
+      'metal-detection': '/metal-detection',
+      'target-zones': '/target-zones',
+      'ai-analysis': '/ai-analysis',
+      'telemetry-data': '/telemetry',
+      'survey-history': '/survey-history',
+      'sensor-diagnostics': '/diagnostics',
+      'system-status': '/diagnostics',
+      'configuration': '/configuration'
+    };
+    const targetRoute = routeMap[page] || '/overview';
+    navigate(targetRoute);
+  }, [navigate]);
   const [telemetry, setTelemetry] = useState<TelemetryState>(INITIAL_TELEMETRY);
   const [targets, setTargets] = useState<TargetAnomaly[]>(INITIAL_TARGETS);
   const [missions] = useState<SurveyMission[]>(MOCK_MISSIONS);
@@ -61,18 +116,27 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(INITIAL_ACTIVITY_LOGS);
   const [signalHistory, setSignalHistory] = useState<SignalHistoryPoint[]>(generateInitialSignalHistory);
   const [measurementPoints, setMeasurementPoints] = useState<StaticMeasurementPoint[]>(GENERATED_MEASUREMENTS);
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {
-      id: 'init-1',
-      title: 'SYSTEM READY',
-      message: 'Telemetry downlink established with RV Samudra.',
-      type: 'info',
-      timestamp: '14:32:00'
-    }
-  ]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [selectedTarget, setSelectedTarget] = useState<TargetAnomaly | null>(null);
   const [selectedMission, setSelectedMission] = useState<SurveyMission | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+
+  // AI State
+  const [aiStatus, setAiStatus] = useState<AiServiceStatus>({
+    available: true,
+    configured: false,
+    model: 'gemini-1.5-flash',
+    mode: 'simulation-fallback',
+  });
+  const [targetAnalyses, setTargetAnalyses] = useState<Record<string, TargetAiAnalysis>>({});
+  const [spatialZones, setSpatialZones] = useState<SpatialZone[]>(() => computeSpatialZones(INITIAL_TARGETS));
+  const [missionRecommendations, setMissionRecommendations] = useState<string[]>([
+    'Prioritize Zone Alpha as primary candidate high-resource prospect corridor.',
+    'Execute 10m high-density cross-line transects between L-04 and L-07.',
+    'Screen Zone Beta (A-04) as localized background variance without immediate re-survey.'
+  ]);
+  const [isAiAnalyzing, setIsAiAnalyzing] = useState<boolean>(false);
+  const [showAiZonesOnMap, setShowAiZonesOnMap] = useState<boolean>(true);
 
   // Notification helper
   const addNotification = useCallback((title: string, message: string, type: NotificationItem['type'] = 'info') => {
@@ -129,8 +193,9 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       measurements: 42,
       detectionDuration: '00:28',
       timestamp: new Date().toLocaleTimeString(),
-      interpretation: 'Operator marked candidate target zone. Elevated magnetic/conductive signature registered during live transect.',
+      interpretation: 'Operator marked candidate target zone. Elevated sensor response recorded during live transect.',
       recommendation: 'TARGET FOR FURTHER SURVEY — Marked by mission supervisor.',
+      classification: telemetry.metalResponse >= telemetry.threshold ? 'METAL DETECTED' : 'UNCLASSIFIED ANOMALY',
       queuedForSurvey: true,
     };
 
@@ -150,7 +215,7 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const returnToSurface = useCallback(() => {
     addNotification(
       'RECOVERY PROTOCOL INITIATED',
-      'Winch hoist speed set to 0.5 m/s. Thrusters disengaged. Surface beacon active.',
+      'Tether winch hoist speed set to 0.5 m/s. Sensor pod ascending to surface vessel.',
       'warning'
     );
   }, [addNotification]);
@@ -192,6 +257,93 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }));
     addNotification('BASELINE RESTORED', 'Sensor baseline reset to standard background level (0.31 mV/V).', 'info');
   }, [addNotification]);
+
+  // AI Interpretation Handlers
+  const runAiAnalysis = useCallback(async () => {
+    setIsAiAnalyzing(true);
+    addNotification('AI ANALYSIS STARTED', 'Synthesizing multi-sensor evidence through Gemini backend...', 'info');
+    try {
+      const status = await fetchAiStatus();
+      setAiStatus(status);
+
+      const newAnalyses: Record<string, TargetAiAnalysis> = {};
+      for (const tgt of targets) {
+        try {
+          const res = await requestTargetAiAnalysis(tgt, telemetry, targets.length);
+          newAnalyses[tgt.code] = res;
+        } catch (e) {
+          console.error(`Failed to analyze target ${tgt.code}:`, e);
+        }
+      }
+      setTargetAnalyses(newAnalyses);
+
+      // Re-compute zones and analyze
+      const computedZones = computeSpatialZones(targets);
+      setSpatialZones(computedZones);
+
+      try {
+        const zoneRes = await requestZonesAiAnalysis(computedZones);
+        if (zoneRes?.missionRecommendations?.length > 0) {
+          setMissionRecommendations(zoneRes.missionRecommendations);
+        }
+        if (zoneRes?.zones?.length > 0) {
+          setSpatialZones(prev => prev.map(pz => {
+            const match = zoneRes.zones.find(z => z.zoneId === pz.id);
+            if (match) {
+              return {
+                ...pz,
+                potentialScore: (match.potentialScore as 0 | 1 | 2 | 3 | 4 | 5),
+                scoreLabel: match.scoreLabel,
+                reason: match.reason || pz.reason,
+                recommendedAction: match.recommendedAction || pz.recommendedAction,
+              };
+            }
+            return pz;
+          }));
+        }
+      } catch (ze) {
+        console.warn('Zone interpretation fallback:', ze);
+      }
+
+      addNotification(
+        'AI ANALYSIS COMPLETE',
+        `${Object.keys(newAnalyses).length} targets & ${computedZones.length} resource zones interpreted (${status.mode === 'live' ? 'Gemini Live' : 'Deterministic Engine'}).`,
+        'success'
+      );
+    } catch (err: any) {
+      addNotification('AI ANALYSIS ERROR', err.message || 'Failed to complete AI analysis.', 'alert');
+    } finally {
+      setIsAiAnalyzing(false);
+    }
+  }, [targets, telemetry, addNotification]);
+
+  const analyzeSingleTarget = useCallback(async (code: string) => {
+    const tgt = targets.find(t => t.code === code);
+    if (!tgt) return null;
+    try {
+      const res = await requestTargetAiAnalysis(tgt, telemetry, targets.length);
+      setTargetAnalyses(prev => ({ ...prev, [code]: res }));
+      addNotification(
+        `TARGET ${code} INTERPRETED`,
+        `${res.classification} — Confidence ${(res.confidence * 100).toFixed(0)}%`,
+        'info'
+      );
+      return res;
+    } catch (err: any) {
+      addNotification('AI TARGET ANALYSIS FAILED', err.message, 'alert');
+      return null;
+    }
+  }, [targets, telemetry, addNotification]);
+
+  // Initial load: fetch status and pre-populate target analyses
+  useEffect(() => {
+    fetchAiStatus().then(status => setAiStatus(status)).catch(() => {});
+    targets.forEach(tgt => {
+      requestTargetAiAnalysis(tgt, telemetry, targets.length).then(res => {
+        setTargetAnalyses(prev => ({ ...prev, [tgt.code]: res }));
+      }).catch(() => {});
+    });
+  }, []);
 
   // Central simulation loop
   useEffect(() => {
@@ -305,6 +457,15 @@ export const SimulationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         triggerDemoAnomaly,
         resetDemoToBaseline,
         toggleTargetQueue,
+        aiStatus,
+        targetAnalyses,
+        spatialZones,
+        missionRecommendations,
+        isAiAnalyzing,
+        runAiAnalysis,
+        analyzeSingleTarget,
+        showAiZonesOnMap,
+        setShowAiZonesOnMap,
       }}
     >
       {children}
